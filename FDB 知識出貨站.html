@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FDB 知識出貨站</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
+<style>
+:root{
+  --paper:#EDEFEA; --card:#FAFAF7; --ink:#1E2A2F; --ink-soft:#56636A; --line:#CBD0C8;
+  --kraft:#B9925A; --kraft-soft:#EADBC0; --tape:#F2C21B; --ok:#2F7A55; --ok-soft:#DCEBE2;
+  --warn:#B8452E; --warn-soft:#F5DDD6;
+  --sans:"Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif;
+  --cond:"Barlow Condensed","Arial Narrow","Noto Sans TC",sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#141819; --card:#1D2326; --ink:#E6E9E4; --ink-soft:#A1ABA8; --line:#343B3E;
+    --kraft:#C9A46C; --kraft-soft:#3A3125; --tape:#E8B915; --ok:#5FB487; --ok-soft:#1F3328;
+    --warn:#E07A5F; --warn-soft:#3A2420;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#141819; --card:#1D2326; --ink:#E6E9E4; --ink-soft:#A1ABA8; --line:#343B3E;
+  --kraft:#C9A46C; --kraft-soft:#3A3125; --tape:#E8B915; --ok:#5FB487; --ok-soft:#1F3328;
+  --warn:#E07A5F; --warn-soft:#3A2420;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.7;-webkit-font-smoothing:antialiased}
+.tape{height:10px;background:repeating-linear-gradient(-45deg,var(--tape) 0 14px,var(--ink) 14px 28px)}
+header.top{max-width:820px;margin:0 auto;padding:20px 20px 0}
+.brand{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.brand h1{font-size:26px;font-weight:900;margin:0;letter-spacing:.02em}
+.brand span{color:var(--ink-soft);font-size:14px}
+/* station lane: the one bold element */
+.lane-wrap{overflow-x:auto;margin:18px -20px 0;padding:0 20px 6px}
+.lane{display:flex;min-width:640px;position:relative;padding:8px 0 4px}
+.lane::before{content:"";position:absolute;left:18px;right:18px;top:27px;height:4px;background:var(--line);border-radius:2px}
+.st{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;background:none;border:0;color:inherit;font:inherit;padding:0;cursor:default}
+.st .dot{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-family:var(--cond);font-weight:700;font-size:18px;background:var(--card);border:3px solid var(--line);color:var(--ink-soft);z-index:1}
+.st .lbl{font-size:13px;color:var(--ink-soft);white-space:nowrap}
+.st.done .dot{background:var(--ok);border-color:var(--ok);color:#fff}
+.st.done{cursor:pointer}
+.st.cur .dot{background:var(--tape);border-color:var(--ink);color:#1E2A2F}
+.st.cur .lbl{color:var(--ink);font-weight:700}
+.st.done:hover .lbl,.st.done:focus-visible .lbl{text-decoration:underline}
+main{max-width:820px;margin:0 auto;padding:16px 20px 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:28px 28px 24px;margin-top:8px}
+.card h2{font-size:24px;font-weight:900;margin:0 0 4px;line-height:1.4}
+.card .sub{color:var(--ink-soft);margin:0 0 20px}
+.code{font-family:var(--cond);font-weight:700;color:var(--kraft);font-size:18px;letter-spacing:.04em}
+h3{font-size:17px;margin:24px 0 8px}
+p{margin:0 0 12px}
+.slip{border-left:6px solid var(--kraft);background:var(--kraft-soft);padding:14px 18px;border-radius:0 4px 4px 0;margin:12px 0 18px}
+.slip b{display:block;margin-bottom:2px}
+.slip .muted{color:var(--ink-soft);font-size:14px}
+.q{font-size:18px;font-weight:700;margin:6px 0 10px;line-height:1.6}
+.hint{color:var(--ink-soft);font-size:14px;margin:-4px 0 12px}
+label.chk{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border:1px solid var(--line);border-radius:4px;margin-bottom:10px;cursor:pointer;background:var(--paper)}
+label.chk input{width:20px;height:20px;margin-top:4px;flex:none;accent-color:var(--ok)}
+select,input[type=text],textarea{width:100%;font:inherit;color:var(--ink);background:var(--paper);border:1.5px solid var(--line);border-radius:4px;padding:10px 12px}
+textarea{min-height:180px;resize:vertical;line-height:1.7}
+select:focus,input:focus,textarea:focus{outline:3px solid var(--tape);outline-offset:1px;border-color:var(--ink)}
+.meta{display:flex;justify-content:space-between;color:var(--ink-soft);font-size:13px;margin-top:6px;gap:8px;flex-wrap:wrap}
+.meta .bad{color:var(--warn);font-weight:700}
+.meta .good{color:var(--ok);font-weight:700}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;align-items:center}
+button.btn{font:inherit;font-weight:700;border-radius:4px;padding:11px 20px;cursor:pointer;border:2px solid var(--ink);background:var(--ink);color:var(--paper)}
+button.btn.ghost{background:transparent;color:var(--ink)}
+button.btn.small{padding:6px 12px;font-size:14px}
+button.btn:disabled{opacity:.4;cursor:not-allowed}
+button:focus-visible,.st:focus-visible{outline:3px solid var(--tape);outline-offset:2px}
+.msg{border-radius:4px;padding:14px 16px;margin-top:16px;font-size:15px}
+.msg.ok{background:var(--ok-soft);border-left:5px solid var(--ok)}
+.msg.warn{background:var(--warn-soft);border-left:5px solid var(--warn)}
+.msg.info{background:var(--paper);border-left:5px solid var(--kraft)}
+.msg b{display:block;margin-bottom:2px}
+.ask{margin-top:8px;font-weight:700}
+.thinking{color:var(--ink-soft);font-style:normal}
+.thinking::after{content:"";display:inline-block;width:1.2em;text-align:left;animation:dots 1.2s steps(4) infinite}
+@keyframes dots{0%{content:""}25%{content:"．"}50%{content:"．．"}75%{content:"．．．"}}
+.slides{display:grid;gap:10px;margin-top:10px}
+.sl{border:1px solid var(--line);border-radius:4px;padding:12px 16px;background:var(--paper)}
+.sl .h{font-weight:700}
+.sl ul{margin:6px 0 0;padding-left:1.2em}
+.bars{display:grid;gap:10px;margin:14px 0}
+.bar{display:grid;grid-template-columns:7.5em 1fr 4em;gap:10px;align-items:center;font-size:14px}
+.bar .track{height:12px;background:var(--line);border-radius:6px;overflow:hidden}
+.bar .fill{height:100%;background:var(--ok)}
+.bar .fill.low{background:var(--warn)}
+.total{font-family:var(--cond);font-size:56px;font-weight:700;line-height:1}
+.steps{counter-reset:s;list-style:none;padding:0;margin:8px 0}
+.steps li{counter-increment:s;position:relative;padding:4px 0 8px 40px}
+.steps li::before{content:counter(s);position:absolute;left:0;top:4px;width:28px;height:28px;border-radius:50%;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-family:var(--cond);font-weight:700}
+pre.prompt{white-space:pre-wrap;background:var(--paper);border:1px dashed var(--kraft);padding:14px;border-radius:4px;font-family:var(--sans);font-size:14px;margin:8px 0}
+.files{display:grid;gap:6px;font-size:15px}
+.files code{background:var(--paper);padding:2px 8px;border-radius:3px;word-break:break-all;font-family:var(--sans)}
+.scene{border:1px solid var(--line);border-radius:4px;background:var(--paper);padding:14px 16px}
+.scene .hd{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-weight:700}
+.scene .vis{color:var(--ink-soft);font-size:14px;margin:4px 0 8px}
+.scene textarea{min-height:110px;background:var(--card)}
+.scene .kp{font-size:14px;margin-top:8px}
+.scene .kp span{display:inline-block;background:var(--kraft-soft);border-radius:3px;padding:1px 8px;margin:2px 4px 2px 0}
+.tabs{display:flex;gap:0;border-bottom:2px solid var(--ink);margin-top:8px}
+.tabs button{font:inherit;font-weight:700;background:transparent;border:2px solid var(--ink);border-bottom:0;color:var(--ink);padding:9px 16px;cursor:pointer;border-radius:4px 4px 0 0;margin-right:-2px}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--paper)}
+.tabs button .tag{font-size:12px;font-weight:500;margin-left:6px;background:var(--tape);color:#1E2A2F;border-radius:3px;padding:0 6px}
+.tabpanel{border:2px solid var(--ink);border-top:0;padding:16px 18px;border-radius:0 0 4px 4px}
+.locked{opacity:.45;pointer-events:none}
+footer{max-width:820px;margin:0 auto;padding:0 20px 40px;color:var(--ink-soft);font-size:13px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+footer button{background:none;border:0;color:var(--ink-soft);text-decoration:underline;cursor:pointer;font:inherit;padding:0}
+@media (max-width:560px){.card{padding:20px 16px}.card h2{font-size:21px}.bar{grid-template-columns:6.5em 1fr 3.5em}}
+@media (prefers-reduced-motion:reduce){.thinking::after{animation:none;content:"…"}}
+</style>
+</head>
+<body>
+<div class="tape" aria-hidden="true"></div>
+<header class="top">
+  <div class="brand"><h1>FDB 知識出貨站</h1><span>一站一站走完，你的教材就打包好了</span></div>
+  <div class="lane-wrap"><nav class="lane" id="lane" aria-label="進度"></nav></div>
+</header>
+<main id="app"></main>
+<footer>
+  <span id="aiState"></span>
+  <button id="resetBtn" type="button">清除我的進度，重新開始</button>
+</footer>
+
+<script>
+/* ============================================================
+   設定區：Michelle 要改的東西都在這裡
+   ============================================================ */
+const CONFIG = {
+  deadline: "2026 年 10 月 30 日（五）",
+  uploadFolder: "知識認證計劃_上傳區",
+  contact: "HR L&D Michelle",
+  maxAiRounds: 2           // 每一站 AI 追問幾次後，允許先放行
+};
+
+const MODULES = {
+  M1:{name:"供應鏈基礎通識",topics:["客戶訂單與明細表閱讀理解","WMS／TMS／OMS系統操作","品質標準與異常預防","職場作業安全防護","Excel基礎操作","生成式AI基礎操作"]},
+  M2:{name:"運輸體系",topics:["運輸基礎概念","運輸行政作業","路線規劃調度排車"]},
+  M3:{name:"倉儲體系",topics:["傳統toB倉儲管理","傳統toC倉儲管理","倉儲行政作業","自動化設備實務"]},
+  M4:{name:"倉運協同合作",topics:["產業成本概念","主管基礎管理能力","工作邏輯與營運案例","倉運協同合作"]}
+};
+
+const SECTIONS = [
+  {key:"pain", label:"痛點", title:"情境痛點",
+   q:"新人做這件事，最常在哪裡出包？描述一個你親眼看過的畫面。",
+   hint:"寫出：在哪裡、誰、發生什麼事、造成什麼後果。不用寫得漂亮，像跟同事聊天一樣講就好。",
+   rule:{minChars:60},
+   criteria:"要有具體場景，至少包含『地點或作業環節、人物角色、發生的事、造成的後果』其中三項。只寫抽象概念（例如『新人常常不熟悉流程』）不算通過。"},
+  {key:"steps", label:"拆解", title:"知識拆解",
+   q:"如果要教新人，你會分成幾個步驟？每一步在做什麼、要看什麼或判斷什麼？",
+   hint:"一步寫一行，3 到 7 步。例如：「1. 收到單據先核對品項數量，看的是 … 」",
+   rule:{minLines:3,maxLines:7},
+   criteria:"要有 3 到 7 個有順序的步驟，而且多數步驟要說明『做什麼』以及『看什麼或怎麼判斷』。只有動作沒有判斷依據的步驟太多就不通過。"},
+  {key:"case", label:"案例", title:"實務案例",
+   q:"講一個你親自處理過的真實案例：當時發生什麼？你怎麼處理？結果如何？",
+   hint:"客戶名稱可以用「客戶 A」代替，金額、單價不用寫出來。最後補一句你從中學到什麼。",
+   rule:{minChars:80},
+   criteria:"要同時有『起因（發生什麼）』『處理方式（怎麼做）』『結果』三個要素，且看得出是真實發生的事。"},
+  {key:"pitfalls", label:"誤區", title:"常見誤區",
+   q:"新人或同仁最常犯的錯誤有哪些？",
+   hint:"一個錯誤寫一行，至少 3 項。可以的話補一句「為什麼會犯」。",
+   rule:{minLines:3},
+   criteria:"至少 3 項具體的錯誤做法，每項要具體到看得出是什麼錯誤，不能只是『不夠細心』這種籠統說法。"},
+  {key:"check", label:"檢核", title:"自我檢核表",
+   q:"如果只能給新人一張檢查清單，上面會有哪些項目？",
+   hint:"一項寫一行，5 到 8 項，寫成可以打勾的句子。例如：「出貨前已核對單號與箱數」",
+   rule:{minLines:5,maxLines:8},
+   criteria:"要有 5 到 8 項，每項是可以勾選確認的具體動作或狀態。"}
+];
+
+const PEOPLE = [["何敏慧", "帳務中心", "M1", "客戶訂單與明細表閱讀理解", "應收應付帳務核對與客戶帳務爭議處理", ["帳務對帳落差", "應收應付核對邏輯", "客戶帳務爭議處理案例", "對帳常見疏漏", "應收應付核對Checklist"]], ["黃弘昱", "營運標準優化", "M1", "職場作業安全防護", "倉儲現場安全稽核與危害風險評估實務", ["現場安全稽核情境", "安全稽核要點與法規依據", "稽核與改善案例", "現場常忽略的規定", "安全稽核Checklist"]], ["廖筱婷", "營運優化標準", "M1", "品質標準與異常預防", "QMS品質管理系統建置與稽核實務", ["GXP／QMS稽核情境", "QMS文件建置邏輯", "驗證或稽核案例", "文件紀錄疏漏", "品質稽核自檢表"]], ["田鈞元", "OM2", "M3", "自動化設備實務", "自動化倉（OMEGA2）ASRS系統與進貨流程管理實務", ["ASRS進貨異常情境", "ASRS運作與上架流程", "人工與系統交接案例", "交接常見疏漏", "ASRS進貨檢核表"]], ["張憶珍", "帳務中心", "M4", "產業成本概念", "物流費用與合約成本管理實務", ["費用與合約落差情境", "物流成本概念與合約要點", "費用審核或議價案例", "隱藏成本常見疏漏", "物流費用Checklist"]], ["渠淑惠", "HASS", "M3", "倉儲行政作業", "客戶出貨單據追蹤與POD結案／請款流程實務", ["POD未結案情境", "出貨到請款流程邏輯", "出貨結案案例（以三星為例）", "單據流轉常見疏漏", "出貨結案請款檢核表"]], ["李以蓁", "營運標準優化", "M4", "工作邏輯與營運案例", "人力派遣安排邏輯與管理", ["派遣調度與實際用人的落差情境", "派遣班表、人力數量安排邏輯", "調度成功或失敗案例分享", "調度與請款常見疏漏", "派遣合作Checklist"]], ["袁兆玉", "WS", "M4", "主管基礎管理能力", "倉庫營運管理與團隊帶領實務", ["排班與績效爭議情境", "主管管理要點", "排班調度或激勵案例", "新手主管常見誤區", "主管管理自檢表"]], ["洪鶴娟", "WS", "M3", "倉儲行政作業", "保稅倉進出作業與客戶服務實務", ["保稅倉單據落差情境", "保稅倉進出作業邏輯", "客戶服務案例", "清關常見疏漏", "保稅倉進出檢核表"]], ["凃怡菁", "營運優化標準", "M1", "WMS／TMS／OMS系統操作", "倉運系統需求分析與營運數位流程", ["新客戶需求內容與現場實際作業的落差情境", "從需求到數位流程設計的邏輯拆解", "導入案例", "需求收集常見疏漏", "系統導入與數位流程檢核表"]], ["劉筠頎", "人力資源", "M4", "工作邏輯與營運案例", "人力排班、考勤與勞基法實務", ["考勤與排班合規性之爭議情境", "人力合規判斷與勞基法要點", "排班調整案例", "請假加班認定爭議", "排班與考勤Checklist"]], ["陳嘉明", "GMO", "M2", "運輸基礎概念", "多店配送路網規劃與司機生態圈經營", ["配送路網排程衝突情境", "哩路概念與ASC角色邏輯", "通路統倉共配案例", "司機生態圈經營誤區", "配送路網檢核表"]], ["蘇奎宇", "瑞芳營運", "M2", "路線規劃調度排車", "車隊調度與運輸作業統籌實務", ["尖峰調度衝突情境", "路線容量與排車決策邏輯", "車隊調度案例", "排車忽略變數", "調度排車檢核表"]], ["張家盛", "HA", "M3", "傳統toC倉儲管理", "toC傳統倉儲營運管理實務", ["訂單、庫存、人力、異常多頭並進時，如何拿捏處理優先順序的常見情境", "toC倉日常營運管理的關鍵流程拆解（訂單處理、庫存管理、人力調度、異常排除）", "一次多流程同時協調處理的實際案例（以HA倉為例）", "營運管理時最容易忽略的環節", "toC倉營運管理Checklist"]], ["張宜文", "GMO", "M1", "生成式AI基礎操作", "商業數據專案協作與工具應用實務", ["跨部門數據統整與使用的落差情境", "數據蒐集到產出邏輯", "數據分析工具操作", "數據認知落差", "專案協作檢核表"]], ["曹家寧", "人力資源", "M4", "工作邏輯與營運案例", "新人現場文化認知與體驗優化指引", ["新人對職務認知與現場文化有落差，影響新人體驗與適應力的常見情境", "新人常見認知落差的類型整理（工作內容想像、組織文化、溝通節奏、工作步調等）", "新人適應的成功或失敗案例", "新人文化認知落差的常見成因", "新人現場文化認知與體驗優化指引"]], ["葛萬宏", "BD", "M4", "工作邏輯與營運案例", "新客戶開發與需求釐清實務", ["需求訪談認知落差情境", "新客戶開發流程邏輯", "新客戶開發案例(成功或失敗皆可)", "業務溝通誤區", "需求釐清檢核表"]], ["張揚", "營運標準優化", "M1", "WMS／TMS／OMS系統操作", "倉儲運輸系統專案執行實務", ["既有系統與客戶ERP串接時，資料傳輸異常或欄位對不上的情境", "現場作業流程轉換為系統串接邏輯的執行步驟", "實際執行或異常排除案例", "串接維護時最容易忽略的欄位或時序問題", "系統專案執行檢核表"]], ["曾廣弘", "B3", "M3", "傳統toB倉儲管理", "3PL倉庫新客戶導入與倉位規劃實務", ["倉位規劃疏漏情境", "導入規劃與系統串接邏輯", "新客戶導入或移倉案例", "規劃串接常見錯誤", "新客戶導入檢核表"]], ["胡雅紋", "WS", "M3", "傳統toB倉儲管理", "高價單品倉儲加工包裝站作業實務", ["高價或易碎品項加工包裝時，破損或標籤瑕疵的常見情境", "高價品的破損防護、標籤合規、禮盒組裝站別邏輯", "包裝異常處理案例", "特殊品類加工包裝常見的疏漏（破損、標籤錯貼等）", "高價加工Checklist"]], ["鄭慈鳳", "OM2", "M4", "倉運協同合作", "EC B2B倉儲進出退貨實務", ["進出退貨交織情境", "EC B2B作業與倉運協同邏輯", "OM2進出貨案例", "進出退貨常見疏漏", "EC B2B進出退貨Checklist"]], ["林煌韋", "EC", "M3", "自動化設備實務", "電商自動化倉訂單週期管理與需求預測實務", ["訂單波動的可能情境", "訂單週期與需求預測邏輯", "EC訂單尖峰處理案例", "季節性促銷變數與注意事項", "訂單週期需求預測方法"]], ["蔡明志", "B3", "M3", "傳統toB倉儲管理", "倉儲營運指標Dashboard實務", ["倉儲營運指標（如產能、準確率）異常時未被即時發現的常見情境", "倉儲指標Dashboard的建置邏輯與判讀方式", "運用指標發現並處理營運問題的案例", "指標監控常見的誤判或盲點", "倉儲指標Dashboard判讀Checklist"]]]; // [姓名, 單位, 模組, 官方主題, 建議主題, [5 段大綱]]
+
+/* 站點 */
+const STATIONS = [
+  {id:"sec",label:"安檢"},{id:"topic",label:"報到"},
+  ...SECTIONS.map((s,i)=>({id:"s"+i,label:s.label})),
+  {id:"pack",label:"原稿"},{id:"qc",label:"品檢"},{id:"ship",label:"出貨"}
+];
+
+/* ============================================================
+   狀態與存檔
+   ============================================================ */
+const KEY="fdb-station-v1";
+const blank=()=>({step:0,maxStep:0,ack:[false,false,false],person:"",name:"",unit:"",
+  topic:{module:"",official:"",title:"",changed:false,checked:false,feedback:null},
+  sec:SECTIONS.map(()=>({text:"",status:"todo",rounds:0,review:null,sensOk:false})),
+  deck:null,scenes:null,score:null,route:"nlm",verify:{}});
+let S=load();
+function load(){try{const r=localStorage.getItem(KEY);if(r){const o=JSON.parse(r);(o.sec||[]).forEach(x=>{if(x.review&&x.review.pending)x.review=null;});if(o.deck&&!Array.isArray(o.scenes)){o.deck=null;o.score=null;}delete o.script;return Object.assign(blank(),o);}}catch(e){}return blank();}
+let saveT;function save(){clearTimeout(saveT);saveT=setTimeout(()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}},250);}
+
+/* ============================================================
+   AI（品檢員）
+   ============================================================ */
+let sample=null, downloads=null, aiOff=false, busy=null;
+(async()=>{
+  if(!window.claude){aiOff=true;paintAi();return;}
+  try{sample=await claude.use("sample");}catch(e){sample=null;}
+  try{downloads=await claude.use("downloads");}catch(e){downloads=null;}
+  if(!sample)aiOff=true;
+  paintAi();render();
+})();
+function paintAi(){
+  document.getElementById("aiState").textContent = aiOff
+    ? "AI 品檢員未啟用：目前使用基本檢查模式"
+    : "AI 品檢員：已就位（使用你自己的 Claude 帳號額度）";
+}
+function aiErr(e){
+  const c=e&&e.code;
+  if(["not_granted","sampling_disabled","capability_disabled","capability_removed","not_declared"].includes(c)){
+    aiOff=true;paintAi();return "AI 品檢員無法使用，已切換為基本檢查模式，你可以繼續往下走。";}
+  if(c==="rate_limited")return "品檢員忙線中，等 30 秒再按一次。";
+  if(c==="session_expired")return "Claude 登入已過期，請重新整理頁面（進度會保留）。";
+  if(c==="refused")return "這段內容品檢員無法處理，請改寫後再送一次。";
+  if(c==="cancelled")return "已取消。";
+  return "品檢員這次沒有回好，請再按一次。";
+}
+async function askJSON(prompt,tier){
+  return await sample.json(prompt,{modelTier:tier||"quick",cache:false});
+}
+const BASE_RULES=`你是 ASC 艾立供應鏈（台灣倉儲物流公司）FDB 知識認證計畫的「教材品檢員」，陪伴資深同仁把現場經驗整理成給新人看的教材（一支 10 分鐘內影片＋一份講義）。
+一律使用繁體中文、台灣用語，口氣像友善的資深同事，直接、具體、不說教、不用官腔。`;
+
+/* ============================================================
+   敏感資料偵測（依公司資訊安全守則：機密性、個資保護）
+   ============================================================ */
+const SENS=[
+  {re:/(NT\$?|新台幣|\$)\s*\d[\d,\.]*/gi,why:"金額"},
+  {re:/\d[\d,]*(\.\d+)?\s*(元|塊|萬元|萬)/g,why:"金額"},
+  {re:/09\d{2}[-\s]?\d{3}[-\s]?\d{3}/g,why:"手機號碼"},
+  {re:/[\w.+-]+@[\w-]+\.[\w.]+/g,why:"Email"},
+  {re:/\b[A-Z][12]\d{8}\b/g,why:"身分證字號"},
+  {re:/(密碼|password|帳密|單價|報價|折扣率)/gi,why:"帳密或報價相關字詞"}
+];
+function scanSens(t){const hits=[];SENS.forEach(s=>{const m=t.match(s.re);if(m)m.forEach(x=>hits.push({x:x.trim(),why:s.why}));});
+  const seen=new Set();return hits.filter(h=>{const k=h.x+h.why;if(seen.has(k))return false;seen.add(k);return true;}).slice(0,6);}
+
+/* ============================================================
+   工具
+   ============================================================ */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const lines=t=>t.split(/\n+/).map(x=>x.replace(/^\s*([0-9０-９]+[\.．、)]|[-•●☐□✓]\s*)/,"").trim()).filter(Boolean);
+const chars=t=>t.replace(/\s/g,"").length;
+const me=()=>S.person!==""&&S.person!=="other"?PEOPLE[+S.person]:null;
+function topicLine(){return `${S.topic.module}｜${(MODULES[S.topic.module]||{}).name||""}／${S.topic.official}：${S.topic.title}`;}
+function go(n){S.step=n;S.maxStep=Math.max(S.maxStep,n);save();render();window.scrollTo({top:0,behavior:"smooth"});}
+
+function localCheck(i){
+  const r=SECTIONS[i].rule,t=S.sec[i].text,c=chars(t),l=lines(t).length,out=[];
+  if(r.minChars&&c<r.minChars)out.push(`再多寫一點（目前 ${c} 字，至少 ${r.minChars} 字）`);
+  if(r.minLines&&l<r.minLines)out.push(`至少要 ${r.minLines} 行（目前 ${l} 行）`);
+  if(r.maxLines&&l>r.maxLines)out.push(`最多 ${r.maxLines} 行（目前 ${l} 行），請合併或刪減`);
+  return out;
+}
+
+/* ============================================================
+   畫面
+   ============================================================ */
+function renderLane(){
+  $("#lane").innerHTML=STATIONS.map((st,i)=>{
+    const cls=i===S.step?"cur":(i<=S.maxStep&&i!==S.step?"done":"");
+    const can=i<=S.maxStep&&i!==S.step;
+    return `<button class="st ${cls}" type="button" ${can?`data-go="${i}"`:"disabled"} aria-current="${i===S.step?"step":"false"}" aria-label="第 ${i+1} 站 ${st.label}">
+      <span class="dot">${i+1}</span><span class="lbl">${st.label}</span></button>`;}).join("");
+  $("#lane").querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>go(+b.dataset.go));
+  const cur=$("#lane .cur");if(cur)cur.scrollIntoView({block:"nearest",inline:"center"});
+}
+function render(){
+  renderLane();
+  const id=STATIONS[S.step].id;
+  const v = id==="sec"?vSec(): id==="topic"?vTopic(): id==="pack"?vPack(): id==="qc"?vQc(): id==="ship"?vShip(): vSection(+id.slice(1));
+  $("#app").innerHTML=v; bind(id);
+}
+
+/* ---------- 第 1 站：資安確認 ---------- */
+const ACKS=[
+  "我不會輸入客戶的訂單明細、單價報價、合約條文原文。客戶名稱可以提，細節改寫成「客戶 A」「某品項」。",
+  "我不會輸入任何人的個資（電話、身分證、Email）、系統帳號密碼，也不貼內部系統畫面。",
+  "上傳到 NotebookLM 或 FlexClip 的內容，只用這個工具產出的教材原稿，不上傳公司內部原始文件。"
+];
+function vSec(){
+  return `<section class="card">
+  <div class="code">第 1 站／共 10 站</div>
+  <h2>出發前先過安檢</h2>
+  <p class="sub">這個工具會把你輸入的內容送給 AI 整理。依公司《資訊安全守則與作業規範》的機密性原則，請確認以下三件事。</p>
+  ${ACKS.map((a,i)=>`<label class="chk"><input type="checkbox" data-ack="${i}" ${S.ack[i]?"checked":""}><span>${a}</span></label>`).join("")}
+  <div class="msg info"><b>順便提醒</b>下載的檔案請直接上傳到公司資料夾，不要用 USB 隨身碟搬檔。離開座位記得 Win + L 鎖螢幕。</div>
+  <div class="msg info"><b>這一趟大約 60 分鐘</b>進度會自動存在這台電腦的瀏覽器裡，中途被叫走也沒關係，回來從同一站繼續。</div>
+  <div class="row"><button class="btn" id="next" ${S.ack.every(Boolean)?"":"disabled"}>確認，開始報到</button></div>
+  </section>`;
+}
+
+/* ---------- 第 2 站：報到與主題 ---------- */
+function vTopic(){
+  const p=me(), T=S.topic;
+  const opts=PEOPLE.map((x,i)=>`<option value="${i}" ${S.person==String(i)?"selected":""}>${esc(x[0])}｜${esc(x[1])}</option>`).join("");
+  let body="";
+  if(S.person===""){body=`<p class="hint">選好名字後，會帶出 HR 為你準備的建議主題。</p>`;}
+  else{
+    const otherFields = S.person==="other" ? `
+      <div class="row" style="margin-top:12px">
+        <input type="text" id="nm" placeholder="中文姓名" value="${esc(S.name)}" style="flex:1;min-width:140px">
+        <input type="text" id="un" placeholder="單位" value="${esc(S.unit)}" style="flex:1;min-width:140px">
+      </div>`:"";
+    const sug = p ? `<div class="slip"><b>HR 建議主題：${esc(p[4])}</b>
+        <span class="muted">${p[2]}｜${MODULES[p[2]].name}／${esc(p[3])}</span></div>` : "";
+    const showEdit = !p || T.changed;
+    const modSel=Object.keys(MODULES).map(k=>`<option value="${k}" ${T.module===k?"selected":""}>${k}｜${MODULES[k].name}</option>`).join("");
+    const offSel=(MODULES[T.module]?.topics||[]).map(o=>`<option ${T.official===o?"selected":""}>${esc(o)}</option>`).join("");
+    const fb=T.feedback;
+    body = otherFields + sug + (p && !T.changed ? `
+      <p>這是建議，不是規定。你可以直接用，也可以換成你更有把握的題目。</p>
+      <div class="row"><button class="btn" id="useSug">用這個主題</button><button class="btn ghost" id="chg">我想調整主題</button></div>`
+      : `
+      <h3>選擇所屬模組與官方主題</h3>
+      <div class="row" style="margin-top:0">
+        <select id="mod" style="flex:1;min-width:200px"><option value="">選擇模組</option>${modSel}</select>
+        <select id="off" style="flex:1;min-width:200px" ${T.module?"":"disabled"}><option value="">選擇官方主題</option>${offSel}</select>
+      </div>
+      <h3>你的教材主題</h3>
+      <p class="hint">越具體越好，10 分鐘要講得完。例如「保稅倉進出作業與客戶服務實務」比「倉儲管理」好。</p>
+      <input type="text" id="tt" value="${esc(T.title)}" placeholder="寫下你想教的主題">
+      ${fb?`<div class="msg ${fb.ok?"ok":"warn"}"><b>${fb.ok?"題目可以":"品檢員建議"}</b>${esc(fb.feedback)}${fb.suggestion&&!fb.ok?`<div class="ask">建議改成：${esc(fb.suggestion)}</div><div class="row" style="margin-top:8px"><button class="btn small ghost" id="useAiTitle">套用這個題目</button></div>`:""}</div>`:""}
+      <div id="tmsg"></div>
+      <div class="row">
+        ${aiOff?"":`<button class="btn ghost" id="chkTopic">請品檢員看看題目</button>`}
+        <button class="btn" id="confirmTopic">確認主題，前往下一站</button>
+        ${p?`<button class="btn ghost" id="backSug">改回建議主題</button>`:""}
+      </div>`);
+  }
+  return `<section class="card">
+  <div class="code">第 2 站／共 10 站</div>
+  <h2>報到：確認你要教什麼</h2>
+  <p class="sub">主題決定了接下來每一站的問題方向。</p>
+  <select id="who" aria-label="選擇你的名字"><option value="">選擇你的名字</option>${opts}<option value="other" ${S.person==="other"?"selected":""}>名單上沒有我</option></select>
+  ${body}
+  </section>`;
+}
+
+/* ---------- 第 3–7 站：五段內容 ---------- */
+function vSection(i){
+  const s=SECTIONS[i], st=S.sec[i], p=me();
+  const outline = (p && !S.topic.changed) ? p[5][i] : "";
+  return `<section class="card">
+  <div class="code">第 ${i+3} 站／共 10 站</div>
+  <h2>${s.title}</h2>
+  <p class="sub">主題：${esc(S.topic.title)}</p>
+  ${outline?`<div class="slip"><b>你的建議書這一段寫的方向</b>${esc(outline)}</div>`:""}
+  <p class="q">${s.q}</p>
+  <p class="hint">${s.hint}</p>
+  <textarea id="ta" aria-label="${s.title}">${esc(st.text)}</textarea>
+  <div class="meta" id="meta"></div>
+  <div id="sensBox"></div>
+  <div id="rvBox" aria-live="polite"></div>
+  <div class="row" id="btns"></div>
+  </section>`;
+}
+function sectionDyn(i){
+  const s=SECTIONS[i], st=S.sec[i], lc=localCheck(i), c=chars(st.text), l=lines(st.text).length;
+  const ruleTxt=[s.rule.minChars?`${c} 字`:"", (s.rule.minLines||s.rule.maxLines)?`${l} 行`:""].filter(Boolean).join("／");
+  $("#meta").innerHTML=`<span>${ruleTxt}</span><span class="${lc.length?"bad":"good"}">${lc.length?lc.join("；"):"基本檢查通過"}</span>`;
+  const sens=scanSens(st.text), sensBlock=sens.length>0&&!st.sensOk;
+  const sb=$("#sensBox");
+  const sensKey=sens.map(h=>h.x).join("|")+(st.sensOk?"#ok":"");
+  if(sb.dataset.k!==sensKey){
+    sb.dataset.k=sensKey;
+    sb.innerHTML = sens.length && !st.sensOk ? `<div class="msg warn"><b>安檢提醒：可能有機密資料</b>偵測到：${sens.map(h=>`「${esc(h.x)}」(${h.why})`).join("、")}。<br>請改寫成「某金額」「客戶 A」等說法。如果這是示意用的虛構數字，請勾選：
+     <label class="chk" style="margin:10px 0 0"><input type="checkbox" id="sensOk"><span>我確認這不是真實的機密資料</span></label></div>`:"";
+    const so=$("#sensOk"); if(so)so.onchange=e=>{st.sensOk=e.target.checked;save();sectionDyn(i);};
+  }
+  const rv=st.review;
+  let h="";
+  if(rv&&rv.pending)h=`<div class="msg info"><span class="thinking">品檢員正在看</span></div>`;
+  else if(rv&&rv.err)h=`<div class="msg warn">${esc(rv.err)}</div>`;
+  else if(rv&&rv.pass)h=`<div class="msg ok"><b>通過品檢</b>${esc(rv.feedback)}</div>`;
+  else if(rv)h=`<div class="msg warn"><b>還差一點</b>${esc(rv.feedback)}${rv.question?`<div class="ask">追問：${esc(rv.question)}</div><p class="hint" style="margin:6px 0 0">直接在上方輸入框補充，再送一次。</p>`:""}</div>`;
+  $("#rvBox").innerHTML=h;
+  const passed = st.status==="pass"||st.status==="soft";
+  const canSoft = !passed && rv && !rv.pass && !rv.pending && !rv.err && st.rounds>=CONFIG.maxAiRounds;
+  const block = lc.length>0 || sensBlock;
+  $("#btns").innerHTML = `<button class="btn ghost" id="prev">上一站</button>` + (passed
+      ? `<button class="btn" id="next">前往下一站</button>`
+      : aiOff
+        ? `<button class="btn" id="passLocal" ${block?"disabled":""}>這段完成，前往下一站</button>`
+        : `<button class="btn" id="review" ${block||(rv&&rv.pending)?"disabled":""}>送品檢</button>
+           ${canSoft?`<button class="btn ghost" id="soft">先放行，之後再回來補</button>`:""}`);
+  const on=(sel,fn)=>{const el=$(sel);if(el)el.onclick=fn;};
+  on("#prev",()=>go(S.step-1));
+  on("#review",()=>reviewSection(i));
+  on("#soft",()=>{st.status="soft";go(S.step+1);});
+  on("#passLocal",()=>{st.status="pass";go(S.step+1);});
+  on("#next",()=>go(S.step+1));
+}
+
+/* ---------- 第 8 站：打包 ---------- */
+const RATE=220; // 中文旁白每分鐘約 220 字
+const narrChars=()=>(S.scenes||[]).reduce((a,x)=>a+chars(x.narration||""),0);
+function durHtml(){const n=narrChars(),est=Math.round(n/RATE*10)/10;
+  return `<span>旁白共 ${n} 字</span><span class="${est>10?"bad":"good"}">預估影片 ${est} 分鐘${est>10?"，超過 10 分鐘，請刪減旁白":""}</span>`;}
+let packStage="";
+function trimHtml(){
+  if(narrChars()/RATE<=10)return "";
+  return aiOff?`<div class="msg warn"><b>影片會超過 10 分鐘</b>請在上方旁白刪減，降到 ${RATE*10} 字以下就能往下走。</div>`
+    :`<div class="msg warn"><b>影片會超過 10 分鐘</b>可以自己刪減上方旁白，或讓 AI 幫你精簡（必講重點會保留）。
+      <div class="row" style="margin-top:10px"><button class="btn small" id="trim">請 AI 精簡旁白</button></div></div>`;
+}
+function vPack(){
+  const d=S.deck, sc=S.scenes;
+  return `<section class="card">
+  <div class="code">第 8 站／共 10 站</div>
+  <h2>整理教材原稿</h2>
+  <p class="sub">${aiOff?"把你前面寫的五段內容排成教材原稿。":"AI 只會重新排列、精簡你寫的內容，不會替你加料。"}教材原稿是下一站餵給 AI 的原料：同一份原稿，會同時產出你的講義和影片。</p>
+  ${d&&sc||busy==="pack"?"":`<div class="row"><button class="btn" id="pack">${aiOff?"開始整理":(d?"繼續整理影片分鏡":"請 AI 整理原稿")}</button></div>`}
+  <div id="packMsg" aria-live="polite">${busy==="pack"?`<div class="msg info"><span class="thinking">${esc(packStage)}</span><div class="hint" style="margin:4px 0 0">已等待 <span id="waitSec">0</span> 秒，通常 30–90 秒，請不要關閉頁面</div></div>`:""}</div>
+  ${d&&sc?`
+    <h3>原稿第一部分：講義重點</h3>
+    <p class="hint">下一站 AI 做講義時，會依這個順序與內容排版。</p>
+    <div class="slides">
+      <div class="sl"><div class="h">標題：${esc(d.title)}</div></div>
+      <div class="sl"><div class="h">學習目標</div><ul>${d.objectives.map(o=>`<li>${esc(o)}</li>`).join("")}</ul></div>
+      ${d.slides.map(sl=>`<div class="sl"><div class="h">${esc(sl.heading)}</div><ul>${sl.bullets.map(b=>`<li>${esc(b)}</li>`).join("")}</ul></div>`).join("")}
+      <div class="sl"><div class="h">重點摘要</div><ul>${d.summary.map(o=>`<li>${esc(o)}</li>`).join("")}</ul></div>
+    </div>
+    <h3>原稿第二部分：影片分鏡（${sc.length} 個場景）</h3>
+    <p class="hint">旁白可以直接修改。講義重點要改，請回前面的站修改後按「重新整理」。</p>
+    <div class="slides">${sc.map((x,k)=>`<div class="scene">
+      <div class="hd"><span>場景 ${k+1}｜${esc(x.scene)}</span></div>
+      <div class="vis">畫面建議：${esc(x.visual)}</div>
+      <textarea data-narr="${k}" aria-label="場景 ${k+1} 旁白">${esc(x.narration)}</textarea>
+      ${x.keypoints.length?`<div class="kp">必講重點：${x.keypoints.map(t=>`<span>${esc(t)}</span>`).join("")}</div>`:""}
+    </div>`).join("")}</div>
+    <div class="meta" id="dur">${durHtml()}</div>
+    <div id="trimBox">${trimHtml()}</div>
+    <div class="row">
+      <button class="btn ghost" id="prev">上一站</button>
+      <button class="btn ghost" id="repack">重新整理</button>
+      <button class="btn" id="next" ${narrChars()/RATE>10?"disabled":""}>${aiOff?"前往出貨":"送去品檢"}</button>
+    </div>`:`<div class="row"><button class="btn ghost" id="prev">上一站</button></div>`}
+  </section>`;
+}
+
+/* ---------- 第 9 站：品檢評分 ---------- */
+const CRIT=[["主題契合度",15],["教材完整性",20],["內容正確度",20],["影片品質",15],["實務性",15],["自學可用性",15]];
+function vQc(){
+  const sc=S.score;
+  if(aiOff){return `<section class="card"><div class="code">第 9 站／共 10 站</div><h2>品檢</h2>
+    <div class="msg info">AI 品檢員未啟用，這一站略過。正式分數以 HR 審查為準（70 分通過）。</div>
+    <div class="row"><button class="btn ghost" id="prev">上一站</button><button class="btn" id="next">前往出貨</button></div></section>`;}
+  return `<section class="card">
+  <div class="code">第 9 站／共 10 站</div>
+  <h2>品檢：出貨前預估分數</h2>
+  <p class="sub">用 HR 審查的 6 項標準預估，70 分以上通過。這只是預估，正式分數以 HR 審查為準。講義和影片還沒做，影片品質先以分鏡完整度與長度估。</p>
+  ${sc?"":`<div class="row"><button class="btn ghost" id="prev">上一站</button><button class="btn" id="qc">開始品檢</button></div>`}
+  ${busy==="qc"?`<div class="msg info"><span class="thinking">品檢中</span></div>`:""}
+  ${sc?`
+    <div class="total">${sc.total}<span style="font-size:22px"> / 100</span></div>
+    <div class="bars">${CRIT.map(([k,max])=>{const v=Math.max(0,Math.min(max,+(sc.scores?.[k]??0)));const low=v/max<0.7;
+      return `<div class="bar"><span>${k}</span><span class="track"><span class="fill ${low?"low":""}" style="width:${v/max*100}%;display:block"></span></span><span>${v} / ${max}</span></div>`;}).join("")}</div>
+    <div class="msg ${sc.total>=70?"ok":"warn"}"><b>${sc.total>=70?"可以出貨":"建議先補強"}</b>${esc(sc.advice)}</div>
+    <div class="row">
+      ${sc.goBack>=0&&sc.goBack<5?`<button class="btn ghost" id="goFix">回「${SECTIONS[sc.goBack].title}」補強</button>`:""}
+      <button class="btn ghost" id="reqc">重新品檢</button>
+      <button class="btn" id="next">前往出貨</button>
+    </div>`:""}
+  </section>`;
+}
+
+/* ---------- 第 10 站：出貨 ---------- */
+function fileBase(){
+  const n=me()?me()[0]:S.name||"姓名";
+  const t=(S.topic.title||"主題").replace(/[\\/:*?"<>|]/g,"").slice(0,30);
+  return `${S.topic.module||"M?"}_${t}_${n}`;
+}
+function sourceText(){
+  const sp=speaker(),d=S.deck||{objectives:[],slides:[],summary:[]};
+  return `FDB 教材原稿
+主題：${S.topic.title}
+模組：${topicLine()}
+講者：${sp.unit} ${sp.name}
+
+【第一部分：講義重點】
+
+學習目標
+${d.objectives.map(o=>"・"+o).join("\n")}
+
+`+d.slides.map((x,k)=>`${k+1}. ${SECTIONS[k]?.title||""}：${x.heading}\n${x.bullets.map(b=>"・"+b).join("\n")}`).join("\n\n")+`
+
+重點摘要
+${d.summary.map(o=>"・"+o).join("\n")}
+
+【第二部分：影片分鏡】
+
+`+(S.scenes||[]).map((x,k)=>`場景 ${k+1}｜${x.scene}\n畫面建議：${x.visual}\n旁白：${x.narration}\n必講重點：${x.keypoints.join("；")||"無"}`).join("\n\n");
+}
+function nlmPrompt(){
+  return `請只根據教材原稿的「第二部分：影片分鏡」，製作一支給 ASC 艾立供應鏈新進同仁看的繁體中文教學影片，長度 10 分鐘內。
+依照場景順序講解，每個場景的「必講重點」都要講到，不可省略或改變意思。
+語氣親切口語，像資深同事帶新人。不要加入原稿裡沒有的內容、數字或規定。
+主題：${S.topic.title}`;
+}
+function slidePrompt(){
+  const sp=speaker();
+  return `請只根據教材原稿的「第一部分：講義重點」，製作給 ASC 艾立供應鏈新進同仁的教學簡報，全部使用繁體中文與台灣用語，約 8 頁。
+頁面依序：
+1. 封面：${S.topic.title}／講者 ${sp.unit} ${sp.name}
+2. 學習目標
+3–7. 依序為情境痛點、知識拆解、實務案例、常見誤區、自我檢核表（知識拆解保留步驟順序，檢核表逐項列出可打勾的項目）
+8. 重點摘要
+不要加入原稿裡沒有的內容、數字或規定。風格簡潔清楚，適合倉儲物流現場同仁閱讀。`;
+}
+function verifyGroups(){
+  const slide=[
+    {id:"d1",t:"有學習目標頁"},
+    {id:"d2",t:"五段內容都有對應頁面，知識拆解的步驟順序正確"},
+    {id:"d3",t:"有自我檢核表頁與重點摘要頁"},
+    {id:"d4",t:"全部是繁體中文，沒有簡體字"},
+    {id:"d5",t:"沒有出現原稿以外的數字、規定或客戶資料"}];
+  const video=[];
+  (S.scenes||[]).forEach((x,k)=>x.keypoints.forEach((t,j)=>video.push({id:`k${k}_${j}`,t:`場景 ${k+1}：有講到「${t}」，而且意思正確`})));
+  video.push({id:"g1",t:"步驟順序和原稿一致，沒有講錯或顛倒"});
+  video.push({id:"g2",t:"影片沒有出現原稿以外的數字、規定或客戶資料"});
+  video.push({id:"g3",t:"影片長度在 10 分鐘內，配音聽得清楚"});
+  return {slide,video};
+}
+function verifyItems(){const g=verifyGroups();return [...g.slide,...g.video];}
+function vShip(){
+  const b=fileBase(), r=S.route, g=verifyGroups(), done=verifyItems().every(x=>S.verify[x.id]);
+  const chk=x=>`<label class="chk"><input type="checkbox" data-v="${x.id}" ${S.verify[x.id]?"checked":""}><span>${esc(x.t)}</span></label>`;
+  const nlmVideo=`<ol class="steps">
+    <li>在同一本筆記本，右側「工作室」點「影片摘要」旁的編輯圖示。</li>
+    <li>語言選繁體中文，貼上下方影片提示詞，按產生。</li>
+    <li>產生完下載影片。</li>
+  </ol>
+  <pre class="prompt">${esc(nlmPrompt())}</pre>
+  <div class="row" style="margin-top:0"><button class="btn ghost small" data-copy="video">複製影片提示詞</button></div>`;
+  const fc=`<ol class="steps">
+    <li>開啟 flexclip.com/tw，免費註冊登入，按「建立影片」選時間線模式。</li>
+    <li>打開教材原稿 Word 的「影片分鏡」，<b>一個場景做一個片段</b>，共 ${(S.scenes||[]).length} 個。</li>
+    <li>每個片段：左側「語音」→ 文字轉語音，語言選中文（台灣），貼上該場景的旁白。</li>
+    <li>依「畫面建議」從素材庫挑圖，或放 NotebookLM 講義對應頁的截圖。</li>
+    <li>開啟自動字幕，預覽一次，匯出 MP4。</li>
+  </ol>
+  <p class="hint">FlexClip 會一字不差照旁白念，內容最可控，但比 NotebookLM 多花約 1 小時。</p>`;
+  return `<section class="card">
+  <div class="code">第 10 站／共 10 站</div>
+  <h2>出貨：讓 AI 做講義和影片</h2>
+  <p class="sub">把教材原稿交給 NotebookLM，講義和影片都由它產生。你要做的是貼上、按產生、親自驗收。</p>
+
+  <h3>1. 取得教材原稿</h3>
+  <div class="row" style="margin-top:0">
+    <button class="btn" data-copy="source">複製教材原稿</button>
+    <button class="btn ghost" id="dlDocx">下載原稿 Word（存檔用）</button>
+  </div>
+  <div id="dlMsg"></div><p class="hint" id="copyMsg" style="margin-top:8px"></p>
+
+  <h3>2. 建立 NotebookLM 筆記本</h3>
+  <ol class="steps">
+    <li>開啟 notebooklm.google，用 Google 帳號登入，按「建立」新筆記本。</li>
+    <li>「新增來源」選「複製的文字」，貼上教材原稿。只貼這份，不上傳公司內部文件。</li>
+  </ol>
+
+  <h3>3. 做講義</h3>
+  <ol class="steps">
+    <li>右側「工作室」點「簡報」旁的編輯圖示。</li>
+    <li>語言選繁體中文，貼上下方講義提示詞，按產生。</li>
+    <li>產生完下載 PDF。</li>
+  </ol>
+  <pre class="prompt">${esc(slidePrompt())}</pre>
+  <div class="row" style="margin-top:0"><button class="btn ghost small" data-copy="slide">複製講義提示詞</button></div>
+
+  <h3>4. 做影片</h3>
+  <div class="tabs" role="tablist">
+    <button role="tab" data-route="nlm" aria-selected="${r==="nlm"}">NotebookLM<span class="tag">推薦</span></button>
+    <button role="tab" data-route="fc" aria-selected="${r==="fc"}">FlexClip</button>
+  </div>
+  <div class="tabpanel" role="tabpanel">${r==="nlm"?`<p class="hint">最省事：同一本筆記本直接產生。AI 會自己改寫旁白，所以下一步驗收一定要做。</p>`+nlmVideo:fc}</div>
+
+  <h3>5. 驗收：逐項確認</h3>
+  <p class="hint">AI 可能寫錯步驟、漏講重點或冒出簡體字。錯了就重新產生。全部勾完才會出現繳交資訊。</p>
+  <p class="q" style="font-size:16px;margin:14px 0 8px">講義</p>
+  ${g.slide.map(chk).join("")}
+  <p class="q" style="font-size:16px;margin:14px 0 8px">影片</p>
+  ${g.video.map(chk).join("")}
+
+  <div id="submitBox" class="${done?"":"locked"}" aria-hidden="${!done}">
+    <h3>6. 上傳到「${esc(CONFIG.uploadFolder)}」</h3>
+    <div class="files">
+      <div>講義：<code>${esc(b)}_講義.pdf</code></div>
+      <div>影片：<code>${esc(b)}_影片.mp4</code></div>
+    </div>
+    <div class="msg ${done?"ok":"info"}"><b>繳交期限：${esc(CONFIG.deadline)}</b>卡關或有問題，直接找 ${esc(CONFIG.contact)}。</div>
+  </div>
+  <div class="row"><button class="btn ghost" id="prev">上一站</button></div>
+  </section>`;
+}
+
+/* ============================================================
+   事件
+   ============================================================ */
+function bind(id){
+  const on=(sel,ev,fn)=>{const el=$(sel);if(el)el[ev]=fn;};
+  on("#prev","onclick",()=>go(S.step-1));
+  if(id==="sec"){
+    document.querySelectorAll("[data-ack]").forEach(c=>c.onchange=()=>{S.ack[+c.dataset.ack]=c.checked;save();$("#next").disabled=!S.ack.every(Boolean);});
+    on("#next","onclick",()=>go(1));
+  }
+  if(id==="topic"){
+    on("#who","onchange",e=>{S.person=e.target.value;const p=me();
+      S.topic=p?{module:p[2],official:p[3],title:p[4],changed:false,checked:false,feedback:null}:{module:"",official:"",title:"",changed:true,checked:false,feedback:null};
+      save();render();});
+    on("#nm","oninput",e=>{S.name=e.target.value.trim();save();});
+    on("#un","oninput",e=>{S.unit=e.target.value.trim();save();});
+    on("#useSug","onclick",()=>{S.topic.changed=false;go(2);});
+    on("#chg","onclick",()=>{S.topic.changed=true;S.topic.feedback=null;save();render();});
+    on("#backSug","onclick",()=>{const p=me();S.topic={module:p[2],official:p[3],title:p[4],changed:false,checked:false,feedback:null};save();render();});
+    on("#mod","onchange",e=>{S.topic.module=e.target.value;S.topic.official="";S.topic.feedback=null;save();render();});
+    on("#off","onchange",e=>{S.topic.official=e.target.value;S.topic.feedback=null;save();});
+    on("#tt","oninput",e=>{S.topic.title=e.target.value.trim();S.topic.feedback=null;save();});
+    on("#useAiTitle","onclick",()=>{S.topic.title=S.topic.feedback.suggestion;S.topic.feedback={ok:true,feedback:"已套用建議題目。"};save();render();});
+    on("#chkTopic","onclick",checkTopic);
+    on("#confirmTopic","onclick",()=>{
+      const T=S.topic,errs=[];
+      if(S.person==="other"&&(!S.name||!S.unit))errs.push("請填姓名與單位");
+      if(!T.module||!T.official)errs.push("請選模組與官方主題");
+      if(chars(T.title)<6)errs.push("主題請寫具體一點（至少 6 個字）");
+      if(errs.length){$("#tmsg").innerHTML=`<div class="msg warn">${errs.join("；")}</div>`;return;}
+      go(2);});
+  }
+  if(id.startsWith("s")&&id.length===2){
+    const i=+id.slice(1),st=S.sec[i];
+    sectionDyn(i);
+    $("#ta").oninput=e=>{
+      st.text=e.target.value;
+      if(st.status==="pass"||st.status==="soft"){st.status="todo";st.review=null;}
+      if(st.sensOk&&!scanSens(st.text).length)st.sensOk=false;
+      save();clearTimeout(sectionDyn.t);sectionDyn.t=setTimeout(()=>sectionDyn(i),250);};
+  }
+  if(id==="pack"){
+    on("#pack","onclick",doPack);
+    on("#repack","onclick",()=>{if(busy)return;S.deck=null;S.scenes=null;S.score=null;S.verify={};save();doPack();});
+    document.querySelectorAll("[data-narr]").forEach(t=>t.oninput=e=>{
+      S.scenes[+t.dataset.narr].narration=e.target.value;S.score=null;save();
+      $("#dur").innerHTML=durHtml();$("#next").disabled=narrChars()/RATE>10;
+      const tb=$("#trimBox"),over=narrChars()/RATE>10;if(over!==!!tb.innerHTML.trim()){tb.innerHTML=trimHtml();const t=$("#trim");if(t)t.onclick=trimNarr;}});
+    on("#trim","onclick",trimNarr);
+    on("#next","onclick",()=>go(S.step+1));
+  }
+  if(id==="qc"){
+    on("#qc","onclick",doQc);on("#reqc","onclick",doQc);
+    on("#goFix","onclick",()=>go(2+S.score.goBack));
+    on("#next","onclick",()=>go(S.step+1));
+  }
+  if(id==="ship"){
+    on("#dlDocx","onclick",dlDocx);
+    const TXT={source:sourceText,video:nlmPrompt,slide:slidePrompt},NAME={source:"教材原稿",video:"影片提示詞",slide:"講義提示詞"};
+    document.querySelectorAll("[data-copy]").forEach(btn=>btn.onclick=async()=>{
+      const k=btn.dataset.copy;
+      try{await navigator.clipboard.writeText(TXT[k]());btn.textContent="已複製"+NAME[k];setTimeout(()=>btn.textContent=(k==="source"?"複製教材原稿":"複製"+NAME[k]),2000);}
+      catch(e){$("#copyMsg").textContent="無法自動複製，請改用下載的 Word 檔，或手動選取提示詞文字。";}});
+    document.querySelectorAll("[data-route]").forEach(b=>b.onclick=()=>{S.route=b.dataset.route;save();render();});
+    document.querySelectorAll("[data-v]").forEach(c=>c.onchange=()=>{S.verify[c.dataset.v]=c.checked;save();
+      const done=verifyItems().every(x=>S.verify[x.id]);const sb=$("#submitBox");
+      sb.classList.toggle("locked",!done);sb.setAttribute("aria-hidden",String(!done));
+      sb.querySelector(".msg").className="msg "+(done?"ok":"info");});
+  }
+}
+/* ============================================================
+   AI 動作
+   ============================================================ */
+async function checkTopic(){
+  const T=S.topic;
+  if(!T.module||!T.official||chars(T.title)<6){$("#tmsg").innerHTML=`<div class="msg warn">請先選模組、官方主題，並寫下主題。</div>`;return;}
+  $("#tmsg").innerHTML=`<div class="msg info"><span class="thinking">品檢員正在看題目</span></div>`;
+  const prompt=`${BASE_RULES}
+任務：檢查同仁自訂的教材主題是否合適。
+所屬模組：${T.module} ${MODULES[T.module].name}
+官方主題：${T.official}
+同仁自訂主題：${T.title}
+同仁單位：${me()?me()[1]:S.unit}
+判斷標準：1) 與所選模組及官方主題相關；2) 夠聚焦，10 分鐘影片講得完（太大的題目如「倉儲管理」不行）；3) 是可以用現場實務經驗教的題目。標準寬鬆，大致符合就算通過。
+只回覆 JSON：{"ok":true或false,"feedback":"40字內，說明理由","suggestion":"若不通過，給一個更聚焦的主題寫法；通過則空字串"}`;
+  try{const r=await askJSON(prompt,"quick");S.topic.feedback={ok:!!r.ok,feedback:String(r.feedback||""),suggestion:String(r.suggestion||"")};save();render();}
+  catch(e){$("#tmsg").innerHTML=`<div class="msg warn">${esc(aiErr(e))}</div>`;}
+}
+
+async function reviewSection(i){
+  const s=SECTIONS[i],st=S.sec[i];
+  st.review={pending:true};sectionDyn(i);
+  const prev=st.rounds>0?`\n這是第 ${st.rounds+1} 次送檢，同仁已依上次追問補充。若已補上關鍵缺口就讓它通過，不要一直挑新毛病。`:"";
+  const prompt=`${BASE_RULES}
+任務：檢查同仁寫的教材段落「${s.title}」是否達標。
+教材主題：${topicLine()}
+本段要回答的問題：${s.q}
+通過標準：${s.criteria}${prev}
+同仁的回答：
+"""
+${st.text.slice(0,6000)}
+"""
+規則：
+- 只判斷與提問，不要替同仁改寫、不要補上同仁沒寫的內容。
+- 標準不要過嚴：達到通過標準就通過，用字粗糙、口語都沒關係。
+- 不通過時，只問「一個」最關鍵的追問，具體到同仁看了就知道要補什麼。
+只回覆 JSON：{"pass":true或false,"feedback":"50字內，先一句肯定寫得好的地方，不通過時再說缺什麼","question":"不通過時的一個追問；通過則空字串"}`;
+  try{
+    const r=await askJSON(prompt,"quick");
+    st.rounds++;
+    st.review={pass:!!r.pass,feedback:String(r.feedback||""),question:String(r.question||"")};
+    if(r.pass)st.status="pass";
+  }catch(e){st.review={err:aiErr(e)};}
+  save();
+  if(STATIONS[S.step].id==="s"+i)sectionDyn(i);
+}
+
+function sectionDump(){return SECTIONS.map((s,i)=>`【${i+1}. ${s.title}】\n${S.sec[i].text.trim()}`).join("\n\n");}
+function speaker(){const p=me();return {name:p?p[0]:S.name,unit:p?p[1]:S.unit};}
+
+let waitT=null;
+function startWait(){const t0=Date.now();clearInterval(waitT);waitT=setInterval(()=>{const el=$("#waitSec");if(el)el.textContent=Math.round((Date.now()-t0)/1000);},1000);}
+function stopWait(){clearInterval(waitT);}
+async function doPack(){
+  if(aiOff){localPack();save();render();return;}
+  const sp=speaker();
+  const SRC=`教材主題：${topicLine()}
+講者：${sp.unit} ${sp.name}
+
+同仁原始內容：
+"""
+${sectionDump().slice(0,20000)}
+"""
+
+最重要的規則：只能使用原始內容裡的資訊。可以重新排列、精簡、修順語句、合併重複，但不可以新增原文沒有的步驟、數字、法規、案例細節或建議。原文沒寫的就不要寫。`;
+  busy="pack";startWait();
+  try{
+    if(!S.deck){
+      packStage="第 1／2 步：整理講義重點";render();
+      const r=await sample.json(`${BASE_RULES}
+任務：把同仁寫的五段內容整理成教學講義。
+${SRC}
+講義規則：
+- objectives：2–3 條學習目標，格式「學完後你能……」。
+- slides：剛好 5 頁，依序對應情境痛點、知識拆解、實務案例、常見誤區、自我檢核表。heading 是該頁標題（具體，不要只寫段落名稱）；bullets 3–6 條，每條 30 字內。知識拆解保留步驟順序；自我檢核表保留每一項檢查項目原意。
+- summary：3 條重點摘要，每條 30 字內。
+只回覆 JSON：{"title":"講義標題","objectives":["…"],"slides":[{"heading":"…","bullets":["…"]}],"summary":["…"]}`,{modelTier:"default",cache:false});
+      if(!r||!Array.isArray(r.slides))throw {code:"invalid_json"};
+      S.deck={title:String(r.title||S.topic.title),objectives:(r.objectives||[]).map(String).slice(0,3),
+        slides:r.slides.slice(0,5).map(x=>({heading:String(x.heading||""),bullets:(x.bullets||[]).map(String).slice(0,6)})),
+        summary:(r.summary||[]).map(String).slice(0,3)};
+      save();
+    }
+    packStage="第 2／2 步：寫影片分鏡";render();
+    const r2=await sample.json(`${BASE_RULES}
+任務：把同仁寫的五段內容整理成影片稿。這份稿會交給 AI 影片工具 NotebookLM 或 FlexClip 生成影片，不是本人錄影。
+${SRC}
+影片稿規則：
+- scenes 剛好 7 個，依序：開場、情境痛點、知識拆解、實務案例、常見誤區、自我檢核表、結尾。
+- scene：場景名稱。visual：畫面建議，一句話，描述適合放的圖、流程圖或現場照片類型（不要指名真實客戶標誌）。
+- narration：逐字旁白，繁體中文口語，像資深同事帶新人；開場用「大家好，我是${sp.unit}的${sp.name}，今天要跟大家分享${S.topic.title}」；結尾提醒新人用檢核表自我確認。
+- keypoints：該場景 1–3 個「必講重點」，每個 20 字內，是影片絕對不能漏講或講錯的內容。開場與結尾給空陣列。
+- 7 個場景旁白合計 1,200–1,800 字，寧可短不要長。
+只回覆 JSON：{"scenes":[{"scene":"…","visual":"…","narration":"…","keypoints":["…"]}]}`,{modelTier:"default",cache:false});
+    const arr=Array.isArray(r2)?r2:r2&&r2.scenes;
+    if(!Array.isArray(arr)||!arr.length)throw {code:"invalid_json"};
+    S.scenes=arr.slice(0,9).map(x=>({scene:String(x.scene||""),visual:String(x.visual||""),narration:String(x.narration||""),keypoints:(x.keypoints||[]).map(String).slice(0,3)}));
+    S.score=null;S.verify={};
+    busy=null;stopWait();save();render();
+  }catch(e){
+    busy=null;stopWait();save();render();
+    if(aiOff){localPack();save();render();return;}
+    $("#packMsg").innerHTML=`<div class="msg warn">${esc(e&&e.code==="invalid_json"?"AI 這次回傳的內容不完整，請按上方按鈕再試一次（已完成的部分會保留）。":aiErr(e))}</div>`;
+  }
+}
+async function trimNarr(){
+  const b=$("#trim");if(b){b.disabled=true;b.textContent="精簡中…";}
+  const target=Math.round(RATE*9);
+  try{
+    const r=await sample.json(`${BASE_RULES}
+任務：把下列影片旁白精簡到合計 ${target} 字以內，保留每個場景的必講重點與原意，不新增內容，口語自然。場景數量與順序不變。
+${JSON.stringify(S.scenes.map(x=>({scene:x.scene,keypoints:x.keypoints,narration:x.narration})))}
+只回覆 JSON：{"narrations":["場景1旁白","場景2旁白",…]}`,{modelTier:"default",cache:false});
+    const n=r&&r.narrations;
+    if(!Array.isArray(n)||n.length!==S.scenes.length)throw {code:"invalid_json"};
+    n.forEach((t,k)=>S.scenes[k].narration=String(t));S.score=null;save();render();
+  }catch(e){if(b){b.disabled=false;b.textContent="請 AI 精簡旁白";}
+    $("#trimBox").insertAdjacentHTML("beforeend",`<div class="msg warn">${esc(e&&e.code==="invalid_json"?"精簡失敗，請再按一次，或自己刪減上方旁白。":aiErr(e))}</div>`);}
+}
+function localPack(){
+  const cut=t=>t.length>60?t.slice(0,59)+"…":t;
+  const pieces=i=>{let ls=lines(S.sec[i].text);if(ls.length<3)ls=S.sec[i].text.split(/[。！？\n]/).map(x=>x.trim()).filter(Boolean);return ls.slice(0,6).map(cut);};
+  S.deck={title:S.topic.title,objectives:[`學完後你能說出${S.topic.title}的關鍵步驟`,"學完後你能避開常見錯誤，並用檢核表自我確認"],
+    slides:SECTIONS.map((s,i)=>({heading:s.title,bullets:pieces(i)})),summary:lines(S.sec[4].text).slice(0,3).map(cut)};
+  const sp=speaker();
+  const VIS=["現場作業照片或示意圖","步驟流程圖","案例前後對照圖","錯誤做法與正確做法對照","檢核表畫面"];
+  S.scenes=[{scene:"開場",visual:"主題標題與講者單位",narration:`大家好，我是${sp.unit}的${sp.name}，今天要跟大家分享${S.topic.title}。`,keypoints:[]},
+    ...SECTIONS.map((s,i)=>({scene:s.title,visual:VIS[i],narration:S.sec[i].text.trim(),keypoints:lines(S.sec[i].text).slice(0,2).map(t=>t.length>20?t.slice(0,19)+"…":t)})),
+    {scene:"結尾",visual:"謝謝收看",narration:"最後，請大家用這份檢核表自我確認，有問題隨時找我。謝謝大家。",keypoints:[]}];
+  S.verify={};
+}
+
+async function doQc(){
+  busy="qc";S.score=null;render();
+  const prompt=`${BASE_RULES}
+任務：依 FDB 認證評分標準，預估這份教材的分數（滿分 100，70 分通過）。
+評分項目與配分：
+- 主題契合度 15：教材對應正確模組，內容無跑題
+- 教材完整性 20：有學習目標、教學步驟、重點摘要
+- 內容正確度 20：SOP、流程步驟、數字、法規無誤（以內部一致性、邏輯合理判斷）
+- 影片品質 15：影片尚未製作，以影片稿分鏡是否完整、每場景有畫面建議、旁白長度是否在 10 分鐘內估計
+- 實務性 15：案例或情境來自現場真實狀況
+- 自學可用性 15：學習者不需額外說明就能看懂
+評分偏向鼓勵：內容達到基本要求就給該項 70% 以上。
+教材主題：${topicLine()}
+教材原稿：
+"""
+${sourceText().slice(0,12000)}
+"""
+找出最弱的一項，給具體改善建議。goBack 是建議回去補強的段落編號：0 情境痛點、1 知識拆解、2 實務案例、3 常見誤區、4 自我檢核表；不需要回去就填 -1。
+只回覆 JSON：{"scores":{"主題契合度":0,"教材完整性":0,"內容正確度":0,"影片品質":0,"實務性":0,"自學可用性":0},"advice":"60字內","goBack":-1}`;
+  try{
+    const r=await askJSON(prompt,"default");
+    const sc={};let tot=0;CRIT.forEach(([k,max])=>{const v=Math.max(0,Math.min(max,Math.round(+(r.scores?.[k]??0))));sc[k]=v;tot+=v;});
+    S.score={scores:sc,total:tot,advice:String(r.advice||""),goBack:Number.isInteger(+r.goBack)?+r.goBack:-1};
+    busy=null;save();render();
+  }catch(e){busy=null;render();$(".card").insertAdjacentHTML("beforeend",`<div class="msg warn">${esc(aiErr(e))}</div>`);}
+}
+
+/* ============================================================
+   下載
+   ============================================================ */
+async function saveFile(filename,data){
+  const m=$("#dlMsg");
+  if(!downloads){m.innerHTML=`<div class="msg warn">這個畫面無法下載檔案。請用「複製教材原稿」貼到 Word 保存。</div>`;return;}
+  try{await downloads.save({filename,data});m.innerHTML=`<div class="msg ok">已下載：${esc(filename)}</div>`;}
+  catch(e){m.innerHTML=`<div class="msg warn">${e.code==="declined"?"你取消了下載。":"下載失敗，請再試一次。"}</div>`;}
+}
+async function dlDocx(){
+  if(typeof docx==="undefined"){$("#dlMsg").innerHTML=`<div class="msg warn">文件元件沒有載入，請重新整理頁面再試。</div>`;return;}
+  const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,WidthType,HeadingLevel,ShadingType}=docx;
+  const F="Microsoft JhengHei",sp=speaker();
+  const P=(t,o={})=>new Paragraph({spacing:{after:80},children:[new TextRun({text:t,font:F,size:o.size||22,bold:!!o.bold,color:o.color})]});
+  const cell=(kids,w,shade)=>new TableCell({width:{size:w,type:WidthType.PERCENTAGE},shading:shade?{type:ShadingType.CLEAR,fill:shade,color:"auto"}:undefined,
+    margins:{top:80,bottom:80,left:120,right:120},children:kids});
+  const rows=[new TableRow({tableHeader:true,children:[cell([P("場景",{bold:true})],14,"EADBC0"),cell([P("畫面建議",{bold:true})],20,"EADBC0"),cell([P("旁白（逐字）",{bold:true})],46,"EADBC0"),cell([P("必講重點",{bold:true})],20,"EADBC0")]}),
+    ...(S.scenes||[]).map((x,k)=>new TableRow({children:[cell([P(`${k+1}. ${x.scene}`,{bold:true})],14),cell([P(x.visual,{size:20})],20),
+      cell(x.narration.split(/\n+/).filter(Boolean).map(t=>P(t)),46),cell(x.keypoints.length?x.keypoints.map(t=>P("☐ "+t,{size:20})):[P("—",{size:20})],20)]}))];
+  const doc=new Document({sections:[{properties:{page:{margin:{top:900,bottom:900,left:900,right:900}}},children:[
+    P("FDB 教材原稿",{size:36,bold:true}),
+    P(`主題：${S.topic.title}`),P(`模組：${topicLine()}`),P(`講者：${sp.unit} ${sp.name}`),
+    P(`旁白共 ${narrChars()} 字，預估 ${Math.round(narrChars()/RATE*10)/10} 分鐘`,{color:"56636A",size:20}),
+    P(""),
+    P("第一部分：講義重點",{size:28,bold:true}),
+    P("學習目標",{bold:true}),...(S.deck?.objectives||[]).map(o=>P("・"+o)),
+    ...(S.deck?.slides||[]).flatMap((x,k)=>[P(""),P(`${k+1}. ${SECTIONS[k]?.title||""}：${x.heading}`,{bold:true}),...x.bullets.map(t=>P("・"+t))]),
+    P(""),P("重點摘要",{bold:true}),...(S.deck?.summary||[]).map(o=>P("・"+o)),
+    P(""),
+    P("第二部分：影片分鏡",{size:28,bold:true}),
+    new Table({width:{size:100,type:WidthType.PERCENTAGE},rows}),
+    P(""),
+    P("NotebookLM 講義提示詞",{bold:true}),
+    ...slidePrompt().split("\n").map(t=>P(t,{size:20})),
+    P(""),
+    P("NotebookLM 影片提示詞",{bold:true}),
+    ...nlmPrompt().split("\n").map(t=>P(t,{size:20}))
+  ]}]});
+  try{const blob=await Packer.toBlob(doc);await saveFile(fileBase()+"_教材原稿.docx",blob);}
+  catch(e){$("#dlMsg").innerHTML=`<div class="msg warn">原稿產生失敗，請重新整理頁面再試。</div>`;}
+}
+/* ============================================================
+   重設
+   ============================================================ */
+document.getElementById("resetBtn").onclick=()=>{
+  if(confirm("確定要清除這台電腦上的進度嗎？清除後無法復原。")){S=blank();try{localStorage.removeItem(KEY);}catch(e){}render();}
+};
+render();paintAi();
+</script>
+</body>
+</html>
